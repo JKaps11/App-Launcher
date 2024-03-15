@@ -2,14 +2,12 @@ use::clap::{command, Arg, Command};
 use::serde_json::to_string;
 use::serde::{Deserialize, Serialize};
 use::std::path::Path;
-use::std::fs::File;
-use::std::fs::DirBuilder;
+use::std::fs::{File, DirBuilder, OpenOptions};
 
 const EXECUTABLES_FILE: &str = "../executables.json";
 const EXECUTABLES_DIRECTORY: &str = "../executables_dir";
-static FILE_META_DATA: FileMetaData = FileMetaData{
-    num_executables:0
-};
+
+static CURRENT_FILE_DATA: FileData = get_file_data();
 
 #[derive(Serialize, Deserialize)]
 struct ExecutableData {
@@ -18,10 +16,46 @@ struct ExecutableData {
     num_times_opened: u16,
 }
 
+impl ExecutableData {
+    fn new(executable_name: &str, executable_keyword: &str) -> ExecutableData{
+        ExecutableData {
+            name: executable_name.to_string(),
+            keyword: executable_keyword.to_string(), 
+            num_times_opened: 0,
+        }
+    }
+
+    fn increment_num_times_opened(&mut self) {
+        self.num_times_opened += 1;
+    }
+}
+
 
 #[derive(Serialize, Deserialize)]
-struct FileMetaData {
+struct FileData {
     num_executables: u8,
+    executables: Vec<ExecutableData>
+}
+
+impl FileData {
+    fn new(&self) -> FileData{
+        FileData {
+            num_executables: 0,
+            executables: Vec::new(),
+        }
+    }
+
+    fn get_file_data() -> FileData {
+        
+    }
+
+    fn add_executable(&mut self, executable_data: ExecutableData) {
+        self.executables.push(executable_data);
+    }
+
+    fn increment_num_executables(&mut self) {
+        self.num_executables += 1;
+    }
 }
 
 // handles creation of the file containing the names of the executable files and their keywords
@@ -29,8 +63,15 @@ struct FileMetaData {
 pub fn create_executable_file() {
     match Path::new(EXECUTABLES_FILE).try_exists() {
         Ok(true) => (),
-        Ok(false) => File::create(EXECUTABLES_FILE),
-        Err(_) => panic!("There was an error checking if the Exectuables json exists");
+        Ok(false) => create_file(),
+        Err(_) => panic!("There was an error checking if the Exectuables json exists"),
+    }
+}
+
+pub fn create_file() {
+    match File::create(EXECUTABLES_FILE) {
+        Ok(_) => (),
+        Err(e) => panic!("Error {} with file creation", e),
     }
 }
 
@@ -39,17 +80,24 @@ pub fn create_executable_file() {
 pub fn create_executable_directory() {
     match DirBuilder::new().create(EXECUTABLES_DIRECTORY) {
         Ok(_) => (),
-        Err(_) => panic!("There was an error checking if the Executables directory exitsts");
+        Err(_) => panic!("There was an error checking if the Executables directory exitsts"),
     }
 }
 
 // handles adding an executable to executables json and updating metadata
-pub fn add_executable(json_data: String) {
-    
+pub fn add_executable(exec: &str, keyword: &str) {
+    match OpenOptions::new().write(true).open(EXECUTABLES_FILE) {
+        Ok(file) => {
+            let new_executable_instance = ExecutableData::new(exec, keyword);
+            
+        
+        },
+        Err(e) => panic!("Error with opening executables file in write mode {})", e),
+    }
 }
 
 // handles removing an executable forom executables json and updating metadata
-pub fn remove_executable() {
+pub fn remove_executable(keyword: &str) {
 
 }
 
@@ -95,23 +143,21 @@ fn main() {
         )
         .get_matches();
 
-    let add_args = match_result.subcommand_matches("add").unwrap();
-    let executable_to_add = add_args.get_one::<String>("executable").unwrap();
-    let keyword_to_add = add_args.get_one::<String>("keyword").unwrap();
-    
-    match to_string(&ExecutableData{name: executable_to_add, keyword: keyword_to_add, num_times_opened: 0}) {
-        Ok(data) => add_executable(data),
-        Err(e) => panic!("Error creating json for executable {}", e),
+
+    if let Some(add_args) = match_result.subcommand_matches("add") {
+        let executable_to_add = add_args.get_one::<String>("executable").unwrap();
+        let keyword_to_add = add_args.get_one::<String>("keyword").unwrap();
+        add_executable(executable_to_add, keyword_to_add);
     }
 
+    if let Some(launch_args) = match_result.subcommand_matches("launch") {
+        let keyword_to_search = launch_args.get_one::<String>("keyword").unwrap();
+        launch_executable(keyword_to_search);
+    }
 
-    let launch_args = match_result.subcommand_matches("launch").unwrap();
-    let keyword_to_search = launch_args.get_one::<String>("keyword").unwrap();
-    launch_executable(keyword_to_search);
-
-    let remove_args = match_result.subcommand_matches("remove").unwrap();
-    let keyword_to_search = remove_args.get_one::<String>("keyword").unwrap();
-    remove_executable(keyword_to_search);
-
+    if let Some(remove_args) = match_result.subcommand_matches("remove") {
+        let keyword_to_search = remove_args.get_one::<String>("keyword").unwrap();
+        remove_executable(keyword_to_search);
+    }
 }
 
