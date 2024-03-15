@@ -1,13 +1,12 @@
 use::clap::{command, Arg, Command};
-use::serde_json::to_string;
+use::serde_json::{to_string_pretty, from_str};
 use::serde::{Deserialize, Serialize};
+use::std::collections::HashMap;
 use::std::path::Path;
-use::std::fs::{File, DirBuilder, OpenOptions};
+use::std::fs::{File, DirBuilder, write, read_to_string};
 
 const EXECUTABLES_FILE: &str = "../executables.json";
 const EXECUTABLES_DIRECTORY: &str = "../executables_dir";
-
-static CURRENT_FILE_DATA: FileData;
 
 #[derive(Serialize, Deserialize)]
 struct ExecutableData {
@@ -34,23 +33,38 @@ impl ExecutableData {
 #[derive(Serialize, Deserialize)]
 struct FileData {
     num_executables: u8,
-    executables: Vec<ExecutableData>
+    executables: HashMap<String, ExecutableData>
 }
 
 impl FileData {
     fn new() -> FileData{
         FileData {
             num_executables: 0,
-            executables: Vec::new(),
+            executables: HashMap::new(),
         }
     }
 
     fn get_file_data() -> FileData {
-        File::open(EXECUTABLES_FILE)
+        match read_to_string(EXECUTABLES_FILE){
+            Ok(json_str) => {
+                match from_str::<FileData>(&json_str){
+                    Ok(file_data) => file_data,
+                    Err(e) => panic!("Error when converting json to FileData {}", e),
+                }
+            },
+            Err(e) => panic!("Error when getting json from executables file {}", e),
+        }
+    }
+
+    fn to_json(&self) -> String {
+        match to_string_pretty(self) {
+            Ok(str) => str,
+            Err(e) => panic!("Error when converting FileData to json string {}", e),
+        }
     }
 
     fn add_executable(&mut self, executable_data: ExecutableData) {
-        self.executables.push(executable_data);
+        self.executables.insert(executable_data.keyword, executable_data);
     }
 
     fn increment_num_executables(&mut self) {
@@ -58,25 +72,32 @@ impl FileData {
     }
 }
 
+// handles saving FileData to json
+pub fn save_data_to_executable_json(current_file_data: &FileData) {
+    match write(EXECUTABLES_FILE, current_file_data.to_json()) {
+        Ok(_) => (),
+        Err(e) => panic!("Unable to write FileData to File {}", e),
+    };
+}
+
 // handles creation of the file containing the names of the executable files and their keywords
 // checks to see if the files is already there before creation
-pub fn create_executable_file() {
+pub fn create_executable_file(current_file_data: &mut FileData) {
     match Path::new(EXECUTABLES_FILE).try_exists() {
-        Ok(true) => CURRENT_FILE_DATA = FileData::get_file_data(),
-        Ok(false) => create_file(),
-        Err(_) => panic!("There was an error checking if the Exectuables json exists"),
+        // not first time running
+        Ok(true) => *current_file_data = FileData::get_file_data(),
+        
+        //first time running
+        Ok(false) => {
+            match File::create(EXECUTABLES_FILE) {
+                Ok(_) => (),
+                Err(e) => panic!("Error {} with file creation", e),
+            }
+        },
+        Err(e) => panic!("There was an error checking if the Exectuables json exists {}", e),
     }
 }
 
-// handles 1st time run on machine. will create executable file and initialize new FileData data structure.
-pub fn create_file() {
-    match File::create(EXECUTABLES_FILE) {
-        Ok(_) => {
-            CURRENT_FILE_DATA = FileData::new();
-        },
-        Err(e) => panic!("Error {} with file creation", e),
-    }
-}
 
 // handles creation of directory containing the shortcuts for the executables
 // dirbuilder create automatically checks if the directory already exists
@@ -89,14 +110,7 @@ pub fn create_executable_directory() {
 
 // handles adding an executable to executables json and updating metadata
 pub fn add_executable(exec: &str, keyword: &str) {
-    match OpenOptions::new().write(true).open(EXECUTABLES_FILE) {
-        Ok(file) => {
-            let new_executable_instance = ExecutableData::new(exec, keyword);
-            
-        
-        },
-        Err(e) => panic!("Error with opening executables file in write mode {})", e),
-    }
+
 }
 
 // handles removing an executable forom executables json and updating metadata
@@ -111,7 +125,10 @@ pub fn launch_executable(path: &str) {
 }
 
 fn main() {
-    create_executable_file();
+
+    let current_file_data: &mut FileData = &mut FileData::new();
+
+    create_executable_file(current_file_data);
     create_executable_directory();
 
     // CLI setup using clap
@@ -162,5 +179,7 @@ fn main() {
         let keyword_to_search = remove_args.get_one::<String>("keyword").unwrap();
         remove_executable(keyword_to_search);
     }
+    
+    save_data_to_executable_json(current_file_data);
 }
 
