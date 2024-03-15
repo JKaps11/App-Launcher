@@ -7,7 +7,7 @@ use::std::fs::{File, DirBuilder, OpenOptions};
 const EXECUTABLES_FILE: &str = "../executables.json";
 const EXECUTABLES_DIRECTORY: &str = "../executables_dir";
 
-static CURRENT_FILE_DATA: FileData = get_file_data();
+static CURRENT_FILE_DATA: FileData;
 
 #[derive(Serialize, Deserialize)]
 struct ExecutableData {
@@ -38,7 +38,7 @@ struct FileData {
 }
 
 impl FileData {
-    fn new(&self) -> FileData{
+    fn new() -> FileData{
         FileData {
             num_executables: 0,
             executables: Vec::new(),
@@ -46,7 +46,7 @@ impl FileData {
     }
 
     fn get_file_data() -> FileData {
-        
+        File::open(EXECUTABLES_FILE)
     }
 
     fn add_executable(&mut self, executable_data: ExecutableData) {
@@ -62,15 +62,18 @@ impl FileData {
 // checks to see if the files is already there before creation
 pub fn create_executable_file() {
     match Path::new(EXECUTABLES_FILE).try_exists() {
-        Ok(true) => (),
+        Ok(true) => CURRENT_FILE_DATA = FileData::get_file_data(),
         Ok(false) => create_file(),
         Err(_) => panic!("There was an error checking if the Exectuables json exists"),
     }
 }
 
+// handles 1st time run on machine. will create executable file and initialize new FileData data structure.
 pub fn create_file() {
     match File::create(EXECUTABLES_FILE) {
-        Ok(_) => (),
+        Ok(_) => {
+            CURRENT_FILE_DATA = FileData::new();
+        },
         Err(e) => panic!("Error {} with file creation", e),
     }
 }
