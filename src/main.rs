@@ -5,9 +5,9 @@ use::std::collections::HashMap;
 use::std::path::Path;
 use::std::fs::{File, DirBuilder, write, read_to_string};
 
-const EXECUTABLES_FILE: &str = "../executables.json";
-const EXECUTABLES_DIRECTORY: &str = "../executables_dir";
-
+const EXECUTABLES_FILE: &str = "./executables.json";
+const EXECUTABLES_DIRECTORY: &str = "./executables_dir";
+const BATCH_DIRECTORY: &str = "./batch_dir";
 
 fn check_os(){
     if cfg!(not(target_os = "windows")) {
@@ -40,14 +40,16 @@ impl ExecutableData {
 #[derive(Serialize, Deserialize)]
 struct FileData {
     num_executables: u8,
-    executables: HashMap<String, ExecutableData>
+    executables: HashMap<String, ExecutableData>,
+   // batch_files: Vec<String>,
 }
 
 impl FileData {
     fn new() -> FileData{
-        FileData {
+        FileData { 
             num_executables: 0,
             executables: HashMap::new(),
+    //        batch_files: Vec::new(),
         }
     }
 
@@ -90,16 +92,24 @@ impl FileData {
     }
 
     fn launch_executable(&mut self, keyword: &str) {
-       match self.executables.get_mut(keyword) {
+        
+        match self.executables.get_mut(keyword) {
             None => panic!("No executable found for keyword {}", keyword),
             Some(exe_data) => {
-                exe_data.increment_num_times_opened();
-                let executable_path = format!("{}/{}", EXECUTABLES_DIRECTORY, exe_data.name);
                 // command to launch lnk file on windows 10: START <path>
-                std::process::Command::new("START")
-                    .arg(executable_path)
-                    .status()
-                    .expect("failed to launch executable");
+               
+                let exe_name = format!("\"{}\"",exe_data.name);
+
+                let mut cmd = std::process::Command::new("powershell");
+                cmd.current_dir(EXECUTABLES_DIRECTORY);
+                cmd.args(["START", &exe_name]);
+                
+                let status = cmd.status().expect("failed to execute process");
+
+                println!("Process finished with: {status}");
+                
+
+                exe_data.increment_num_times_opened();
             }
         };
     }
@@ -136,10 +146,23 @@ impl FileData {
 // handles creation of directory containing the shortcuts for the executables
 // dirbuilder create automatically checks if the directory already exists
 pub fn create_executable_directory() {
-    match DirBuilder::new().create(EXECUTABLES_DIRECTORY) {
-        Ok(_) => println!("Executables Directory initialized"),
-        Err(_) => panic!("There was an error checking if the Executables directory exitsts"),
+    if DirBuilder::new().create(EXECUTABLES_DIRECTORY).is_ok() {
+        println!("Executables Directory initialized");
     };
+}
+
+pub fn create_batch_directory() {
+    if DirBuilder::new().create(BATCH_DIRECTORY).is_ok() {
+        println!("Batch Directory Initialized");
+    }
+}
+
+pub fn create_batch_file(config_name: &str, keywords: Vec<&str>) {
+    
+    //let file_name = format!("{}.bat", config_name);
+    //match File::create(file_name) {
+    //    Ok()
+    //}
 }
 
 fn main() {
@@ -150,6 +173,7 @@ fn main() {
 
     current_file_data.create_executable_file();
     create_executable_directory();
+   // create_batch_directory();
 
     // CLI setup using clap
     let match_result = command!()
@@ -157,13 +181,15 @@ fn main() {
         .subcommand(
             Command::new("add")
                 .arg(
-                    Arg::new("executable")
-                    .help("a shortcut to an executable file")
+                    Arg::new("keyword")
+                    .required(true)
+                    .help("keyword used to access executable")
                     .value_parser(clap::value_parser!(String))
                 )
-                .arg(
-                    Arg::new("keyword")
-                    .help("keyword used to access executable")
+                .arg( 
+                    Arg::new("executable")
+                    .required(true)
+                    .help("a shortcut to an executable file")
                     .value_parser(clap::value_parser!(String))
                 )
         )
@@ -171,6 +197,7 @@ fn main() {
             Command::new("launch")
                 .arg(
                     Arg::new("keyword")
+                    .required(true)
                     .value_parser(clap::value_parser!(String))
                 )
         )
@@ -178,6 +205,7 @@ fn main() {
             Command::new("remove")
                 .arg(
                     Arg::new("keyword")
+                    .required(true)
                     .value_parser(clap::value_parser!(String))
                 )
         )
