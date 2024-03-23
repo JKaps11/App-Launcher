@@ -1,0 +1,12 @@
+D:\rustfun\cli_app_launcher\target\release\deps\libanstyle-72b05a15eac1e823.rmeta: C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\lib.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\macros.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\color.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\effect.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\reset.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\style.rs
+
+D:\rustfun\cli_app_launcher\target\release\deps\libanstyle-72b05a15eac1e823.rlib: C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\lib.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\macros.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\color.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\effect.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\reset.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\style.rs
+
+D:\rustfun\cli_app_launcher\target\release\deps\anstyle-72b05a15eac1e823.d: C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\lib.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\macros.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\color.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\effect.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\reset.rs C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\style.rs
+
+C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\lib.rs:
+C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\macros.rs:
+C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\color.rs:
+C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\effect.rs:
+C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\reset.rs:
+C:\Users\jkswa\.cargo\registry\src\index.crates.io-6f17d22bba15001f\anstyle-1.0.6\src\style.rs:
