@@ -157,6 +157,13 @@ impl FileData {
         self.num_executables -= 1;
     }
 
+    pub fn remove_configuration(&mut self, name: &str) {
+        match self.configurations.remove(name) {
+            None => panic!("No configuration with name {} was found", name),
+            Some(config) => println!("Configuration with name {} successfully removed", config.name)
+        }
+    }
+
     pub fn launch_executable(&mut self, keyword: &str) {
         match self.executables.get_mut(keyword) {
             None => panic!("No executable found for keyword {}", keyword),
@@ -171,21 +178,49 @@ impl FileData {
             None => panic!("No configutaions found with name {}", name),
             Some(configuration) => {
                 for executable_keyword in &configuration.executables {
-                    match self.executables.get_mut(executable_keyword) {    
+                    match self.executables.get_mut(executable_keyword) {
                         None => panic!("No executable found for keyword {}", executable_keyword),
                         Some(exe_data) => {
                             exe_data.launch();
-                        }           
+                        }
                     };
                 }
             }
         };
     }
 
+    pub fn list_executables(&self) {
+        println!("Executables");
+        println!("-----------");
+        println!(
+            "{0: <30} | {1: <8} | {2: <8}",
+            "name","keyword", "num_times_opened");
+        println!();
+        for executable in self.executables.values() {
+            println!(
+                "{0: <30} | {1: <8} | {2: <8}",
+                executable.name, executable.keyword, executable.num_times_opened);   
+        }
+    }
+
+
+    pub fn list_configurations(&self) {
+        println!("Configurations");
+        println!("-----------");
+        println!(
+            "{0: <30} | {1: <50}",
+            "name","executables");
+        for config in self.configurations.values() {
+            let executables_list = format!("{:?}", config.executables);
+            println!(
+                "{0: <30} | {1: <50}",
+                config.name, executables_list);   
+        }
+    }
     // handles saving FileData to json
     pub fn save_data_to_executable_json(&self) {
         match write(EXECUTABLES_FILE, self.to_json()) {
-            Ok(_) => println!("Your configuration was successfully saved!"),
+            Ok(_) => println!("Your data was successfully saved!"),
             Err(e) => panic!("Unable to write FileData to File {}", e),
         };
     }

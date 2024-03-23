@@ -20,7 +20,7 @@ fn main() {
     // CLI setup using clap
     let match_result = command!()
         .about("A cli tool that allows you to launch executables by custom keyword")
-        
+        .subcommand_required(true)
         // adds an executable to json
         .subcommand(
             Command::new("add")
@@ -56,6 +56,12 @@ fn main() {
         // removes an executable from the json 
         .subcommand(
             Command::new("remove")
+
+                .arg(
+                    Arg::new("remove_configuration")
+                    .short('c')
+                    .action(ArgAction::SetTrue)
+                )
                 .arg(
                     Arg::new("keyword")
                     .required(true)
@@ -79,6 +85,24 @@ fn main() {
                         .value_parser(clap::value_parser!(String))
                 )
         )
+        .subcommand(
+            Command::new("settings")
+        )
+        .subcommand(
+            Command::new("ls")
+                .arg(
+                    Arg::new("list_executables")
+                        .short('e')
+                        .action(ArgAction::SetTrue)
+                        .conflicts_with("list_configurations")
+                )
+                .arg(
+                    Arg::new("list_configurations")
+                        .short('c')
+                        .action(ArgAction::SetTrue)
+                        .conflicts_with("list_executables")
+                )
+        )
         .get_matches();
 
 
@@ -99,13 +123,32 @@ fn main() {
 
     if let Some(remove_args) = match_result.subcommand_matches("remove") {
         let keyword_to_search = remove_args.get_one::<String>("keyword").unwrap();
-        current_file_data.remove_executable(keyword_to_search);
+        
+        match remove_args.get_flag("remove_configuration") {
+            true => current_file_data.remove_configuration(keyword_to_search),
+            false => current_file_data.remove_executable(keyword_to_search),
+        };
     }
 
     if let Some(config_args) = match_result.subcommand_matches("config") {
         let keyword_to_search = config_args.get_one::<String>("keyword").unwrap();
         let executable_keyword = config_args.get_many::<String>("executable_keywords").unwrap().cloned().collect();
         current_file_data.add_configuration(keyword_to_search, executable_keyword);
+    }
+
+    if let Some(ls_args) = match_result.subcommand_matches("ls") {
+        
+        if ls_args.get_flag("list_executables") || ls_args.get_flag("list_configurations") {
+            match ls_args.get_flag("list_executables") {
+                true => current_file_data.list_executables(),
+                false => current_file_data.list_configurations(),
+            }
+        }
+        else{
+            current_file_data.list_executables();
+            current_file_data.list_configurations();
+        }
+            
     }
     
     current_file_data.save_data_to_executable_json();
