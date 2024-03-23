@@ -1,4 +1,4 @@
-use::clap::{command, Arg, Command};
+use::clap::{command, Arg, Command, ArgAction};
 
 mod file_management;
 
@@ -44,6 +44,7 @@ fn main() {
                 .arg(
                     Arg::new("isConfiguration")
                     .short('c')
+                    .action(ArgAction::SetTrue)
                 )
                 .arg(
                     Arg::new("keyword")
@@ -62,16 +63,6 @@ fn main() {
                 )
         )
 
-        // searches for executable file and creates a shortcut file in the exeuctables_dir
-        .subcommand(
-            Command::new("search")
-                .arg(
-                    Arg::new("file_name")
-                    .required(true)
-                    .value_parser(clap::value_parser!(String))
-                )
-        )
-
         // creates a configuration to launch multiple apps at one
         .subcommand(
             Command::new("config")
@@ -80,9 +71,10 @@ fn main() {
                     .required(true)
                     .value_parser(clap::value_parser!(String))
                 )
+
                 .arg(
                     Arg::new("executable_keywords")
-                        .trailing_var_arg(true)
+                        .value_delimiter(',')
                         .required(true)
                         .value_parser(clap::value_parser!(String))
                 )
@@ -98,12 +90,22 @@ fn main() {
 
     if let Some(launch_args) = match_result.subcommand_matches("launch") {
         let keyword_to_search = launch_args.get_one::<String>("keyword").unwrap();
-        current_file_data.launch_executable(keyword_to_search);
+        
+        match launch_args.get_flag("isConfiguration") {
+            true => current_file_data.launch_configuration(keyword_to_search),
+            false => current_file_data.launch_executable(keyword_to_search),
+        }
     }
 
     if let Some(remove_args) = match_result.subcommand_matches("remove") {
         let keyword_to_search = remove_args.get_one::<String>("keyword").unwrap();
         current_file_data.remove_executable(keyword_to_search);
+    }
+
+    if let Some(config_args) = match_result.subcommand_matches("config") {
+        let keyword_to_search = config_args.get_one::<String>("keyword").unwrap();
+        let executable_keyword = config_args.get_many::<String>("executable_keywords").unwrap().cloned().collect();
+        current_file_data.add_configuration(keyword_to_search, executable_keyword);
     }
     
     current_file_data.save_data_to_executable_json();

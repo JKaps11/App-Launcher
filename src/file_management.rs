@@ -26,6 +26,22 @@ impl ExecutableData {
     fn increment_num_times_opened(&mut self) {
         self.num_times_opened += 1;
     }
+
+    fn launch(&mut self) {
+        // command to launch lnk file on windows 10: START <path>
+
+        let exe_name = format!("\"{}\"", self.name);
+
+        let mut cmd = std::process::Command::new("powershell");
+        cmd.current_dir(EXECUTABLES_DIRECTORY);
+        cmd.args(["START", &exe_name]);
+
+        let status = cmd.status().expect("failed to execute process");
+
+        println!("Process finished with: {status}");
+
+        self.increment_num_times_opened();
+    }
 }
 
 // handles creation of directory containing the shortcuts for the executables
@@ -37,10 +53,25 @@ pub fn create_executable_directory() {
 }
 
 #[derive(Serialize, Deserialize)]
+struct Conifguration {
+    name: String,
+    executables: Vec<String>,
+}
+
+impl Conifguration {
+    fn new(configuration_name: &str, executables_list: Vec<String>) -> Conifguration {
+        Conifguration {
+            name: configuration_name.to_string(),
+            executables: executables_list,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct FileData {
     num_executables: u8,
     executables: HashMap<String, ExecutableData>,
-    // batch_files: Vec<String>,
+    configurations: HashMap<String, Conifguration>,
 }
 
 impl FileData {
@@ -48,8 +79,34 @@ impl FileData {
         FileData {
             num_executables: 0,
             executables: HashMap::new(),
-            //        batch_files: Vec::new(),
+            configurations: HashMap::new(),
         }
+    }
+
+    pub fn add_configuration(&mut self, name: &str, executables: Vec<String>) {
+        let new_configuration = Conifguration::new(name, executables);
+        match self
+            .configurations
+            .insert(name.to_string(), new_configuration)
+        {
+            None => println!("configuration {} added successfully", name),
+            Some(old_configuration) => {
+                let mut user_choice = String::new();
+                println!("Other configuration found with that name. Would you like to replace it with your new configuration? (yes/no)");
+                std::io::stdin().read_line(&mut user_choice).unwrap();
+
+                match user_choice.as_str() {
+                    "yes" => println!("Configuration added successfully"),
+                    "no" => {
+                        self.configurations
+                            .insert(name.to_string(), old_configuration)
+                            .unwrap();
+                        println!("Configuration added successfully");
+                    }
+                    _ => panic!("That was not an option, process terminating"),
+                };
+            }
+        };
     }
 
     fn get_file_data() -> FileData {
@@ -104,19 +161,23 @@ impl FileData {
         match self.executables.get_mut(keyword) {
             None => panic!("No executable found for keyword {}", keyword),
             Some(exe_data) => {
-                // command to launch lnk file on windows 10: START <path>
+                exe_data.launch();
+            }
+        };
+    }
 
-                let exe_name = format!("\"{}\"", exe_data.name);
-
-                let mut cmd = std::process::Command::new("powershell");
-                cmd.current_dir(EXECUTABLES_DIRECTORY);
-                cmd.args(["START", &exe_name]);
-
-                let status = cmd.status().expect("failed to execute process");
-
-                println!("Process finished with: {status}");
-
-                exe_data.increment_num_times_opened();
+    pub fn launch_configuration(&mut self, name: &str) {
+        match self.configurations.get(name) {
+            None => panic!("No configutaions found with name {}", name),
+            Some(configuration) => {
+                for executable_keyword in &configuration.executables {
+                    match self.executables.get_mut(executable_keyword) {    
+                        None => panic!("No executable found for keyword {}", executable_keyword),
+                        Some(exe_data) => {
+                            exe_data.launch();
+                        }           
+                    };
+                }
             }
         };
     }
