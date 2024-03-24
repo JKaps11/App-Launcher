@@ -1,4 +1,10 @@
+![windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+[![rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)](https://github.com/rust-lang/rust)
 
+[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](www.linkedin.com/in/joshua-kaplan-a88315245)
+[![github](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JKaps11)
+
+![github](https://img.shields.io/github/followers/JKaps11.svg?style=social&label=Follow&maxAge=2592000)
 # CLI App Launcher
 
 A cli tool that allows you to store shortcuts to executables and run them by entering a custom keyword into you terminal.
